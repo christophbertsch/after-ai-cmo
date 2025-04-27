@@ -97,12 +97,21 @@ export default function Home() {
         )}
 
         {optimizedProducts.length > 0 && (
-          <div className="max-w-xl mx-auto bg-gray-800 p-4 rounded-lg">
-            <h3 className="font-bold">Optimized Products (First 10):</h3>
-            <ul className="space-y-2">
+          <div className="max-w-2xl mx-auto bg-gray-800 p-4 rounded-lg">
+            <h3 className="font-bold mb-3">Optimized Products (First 10):</h3>
+            <ul className="space-y-4">
               {optimizedProducts.map((product, idx) => (
-                <li key={idx} className="border-b pb-2">
-                  <strong>{product.ProductID}</strong>: {product.OptimizedDescription}
+                <li key={idx} className="border-b border-gray-600 pb-3">
+                  <p><strong>Product ID:</strong> {product.ProductID}</p>
+                  <p><strong>Manufacturer:</strong> {product.Manufacturer}</p>
+                  <p><strong>Original Description:</strong> {product.OriginalDescription}</p>
+                  <p><strong>Optimized Description:</strong> {product.OptimizedDescription}</p>
+                  <p><strong>GTIN:</strong> {product.GTIN}</p>
+                  <p><strong>Hazardous Material:</strong> {product.HazardousMaterial}</p>
+                  <p><strong>Extended Information:</strong> {product.ExtendedInformation}</p>
+                  <p><strong>Product Attributes:</strong> {product.ProductAttributes}</p>
+                  <p><strong>Part Interchange Info:</strong> {product.PartInterchangeInfo}</p>
+                  <p><strong>Digital Assets:</strong> {product.DigitalAssets}</p>
                 </li>
               ))}
             </ul>

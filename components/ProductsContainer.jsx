@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import ProductList from './ProductList';
+import React, { useState, useEffect } from 'react';
 import ProductDetails from './ProductDetails';
 
 function ProductsContainer() {
   const [products, setProducts] = useState([]);
-  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -15,16 +14,24 @@ function ProductsContainer() {
     fetchProducts();
   }, []);
 
+  if (selectedProduct) {
+    return (
+      <ProductDetails
+        productId={selectedProduct}
+        onBack={() => setSelectedProduct(null)}
+      />
+    );
+  }
+
   return (
     <div>
-      {!selectedProductId ? (
-        <ProductList products={products} onSelect={setSelectedProductId} />
-      ) : (
-        <ProductDetails 
-          productId={selectedProductId} 
-          onBack={() => setSelectedProductId(null)} 
-        />
-      )}
+      {products.slice(0, 10).map(product => (
+        <div key={product.id}>
+          <button onClick={() => setSelectedProduct(product.id)}>
+            {product.name}
+          </button>
+        </div>
+      ))}
     </div>
   );
 }

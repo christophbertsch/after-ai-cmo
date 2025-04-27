@@ -1,6 +1,9 @@
-import { IncomingForm } from 'formidable';
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 export const config = {
   api: {
@@ -13,34 +16,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const form = new IncomingForm({ multiples: false });
+  const formData = await req.formData();
+  const file = formData.get('file');
 
-  form.parse(req, (err, fields, files) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: 'Upload failed' });
-    }
+  if (!file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
 
-    const file = files.file;
-    const tempPath = file.filepath;
-    const uploadDir = path.join(process.cwd(), '/uploads');
+  const filename = file.name;
 
-    // Ensure uploads folder exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
-    }
-
-    const newPath = path.join(uploadDir, file.originalFilename);
-
-    // Move the uploaded file
-    fs.rename(tempPath, newPath, (err) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ message: 'Saving file failed' });
-      }
-
-      console.log('File uploaded successfully:', newPath);
-      res.status(200).json({ message: 'File uploaded successfully!' });
+  const { data, error } = await supabase
+    .storage
+    .from(process.env.SUPABASE_BUCKET)
+    .upload(filename, file.stream(), {
+      contentType: file.type
     });
-  });
+
+  if (error) {
+    console.error('Upload error:', error);
+    return res.status(500).json({ message: 'Upload failed' });
+  }
+
+  return res.status(200).json({ message: 'File uploaded successfully!', path: data.path });
 }

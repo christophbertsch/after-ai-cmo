@@ -5,9 +5,12 @@ export default function Home() {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
   const [optimizedFileUrl, setOptimizedFileUrl] = useState('');
+  const [ociFileUrl, setOciFileUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseBucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET;
 
   const handleFileUpload = async () => {
     if (!file || loading) return;
@@ -61,17 +64,12 @@ export default function Home() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: `✅ SEO optimization complete! ${data.report.changesMade} products optimized.` },
-        ]);
-
-        const optimizedUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${process.env.NEXT_PUBLIC_SUPABASE_BUCKET}/seo/${data.report.optimizedFile}`;
-
+        const optimizedUrl = `${supabaseUrl}/storage/v1/object/public/${supabaseBucket}/seo/${data.report.optimizedFile}`;
         setOptimizedFileUrl(optimizedUrl);
 
         setMessages((prev) => [
           ...prev,
+          { role: 'assistant', content: `✅ SEO optimization complete! ${data.report.changesMade} products optimized.` },
           { role: 'assistant', content: `📥 [Download Optimized SEO Catalog](${optimizedUrl})` },
         ]);
       } else {
@@ -81,6 +79,44 @@ export default function Home() {
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: `❌ SEO Optimization failed: ${error.message}` },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConvertOCI = async () => {
+    if (!fileName || loading) return;
+
+    setLoading(true);
+    setMessages((prev) => [
+      ...prev,
+      { role: 'assistant', content: "🔄 Converting to OCI..." },
+    ]);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/convert-to-oci`, {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        const ociUrl = `${supabaseUrl}/storage/v1/object/public/${supabaseBucket}/oci/${data.ociFile}`;
+        setOciFileUrl(ociUrl);
+
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: `✅ OCI conversion complete! ${data.ociProductsCount} products converted.` },
+          { role: 'assistant', content: `📥 [Download OCI Catalog](${ociUrl})` },
+        ]);
+      } else {
+        throw new Error(data.message || 'OCI conversion error');
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: `❌ OCI Conversion failed: ${error.message}` },
       ]);
     } finally {
       setLoading(false);
@@ -112,9 +148,14 @@ export default function Home() {
         </button>
 
         {fileName && (
-          <button onClick={handleOptimizeSEO} className="bg-yellow-500 px-4 py-2 rounded-full hover:bg-yellow-600" disabled={loading}>
-            ✨ Optimize SEO
-          </button>
+          <div className="flex space-x-4">
+            <button onClick={handleOptimizeSEO} className="bg-yellow-500 px-4 py-2 rounded-full hover:bg-yellow-600" disabled={loading}>
+              ✨ Optimize SEO
+            </button>
+            <button onClick={handleConvertOCI} className="bg-purple-500 px-4 py-2 rounded-full hover:bg-purple-600" disabled={loading}>
+              🔄 Convert to OCI
+            </button>
+          </div>
         )}
       </div>
     </div>

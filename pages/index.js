@@ -52,7 +52,7 @@ export default function Home() {
         {messages.map((m, idx) => (
           <div
             key={idx}
-            className={\`p-3 rounded-lg max-w-xl mx-auto \${m.role === 'user' ? 'bg-blue-600 text-right' : 'bg-gray-700 text-left'}\`}
+            className={`p-3 rounded-lg max-w-xl mx-auto ${m.role === 'user' ? 'bg-blue-600 text-right' : 'bg-gray-700 text-left'}`}
           >
             {m.content}
           </div>

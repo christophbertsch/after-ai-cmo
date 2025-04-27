@@ -122,6 +122,13 @@ export default function Home() {
         >
           ✨ Optimize SEO for Catalog
         </button>
+            <button
+  type="button"
+  onClick={handleTestServer}
+  className="bg-purple-500 px-4 py-2 rounded-full font-semibold hover:bg-purple-600 mt-4"
+>
+  🛠️ Test Server Connection
+</button>
       </div>
     </div>
   );

@@ -5,6 +5,8 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [file, setFile] = useState(null);
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -13,7 +15,7 @@ export default function Home() {
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
 
-    const res = await fetch('/api/chat', {
+    const res = await fetch(`${backendUrl}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: input })
@@ -24,16 +26,15 @@ export default function Home() {
     setMessages((prev) => [...prev, botMessage]);
   };
 
-  const handleFileUpload = async (e) => {
-    e.preventDefault();
+  const handleFileUpload = async () => {
     if (!file) return;
+
+    setMessages((prev) => [...prev, { role: 'assistant', content: `📤 Uploading ${file.name}...` }]);
 
     const formData = new FormData();
     formData.append('file', file);
 
-    setMessages((prev) => [...prev, { role: 'assistant', content: `📤 Uploading ${file.name}...` }]);
-
-    const uploadRes = await fetch('/api/upload-catalog', {
+    const uploadRes = await fetch(`${backendUrl}/api/upload-catalog`, {
       method: 'POST',
       body: formData,
     });
@@ -56,31 +57,23 @@ export default function Home() {
     setFile(null);
   };
 
-  const handleTestServer = async () => {
-  const res = await fetch('/api/test', {
-    method: 'POST',
-  });
-
-  const data = await res.json();
-
-  setMessages((prev) => [
-    ...prev,
-    { role: 'assistant', content: `🛠️ Test Server Response: ${data.message}` }
-  ]);
-};
-
   const handleOptimizeSEO = async () => {
     setMessages((prev) => [
       ...prev,
       { role: 'assistant', content: "🚀 Starting SEO optimization..." }
     ]);
 
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: "✅ SEO Titles and Descriptions generated for your catalog!" }
-      ]);
-    }, 3000);
+    const res = await fetch(`${backendUrl}/api/optimize-seo`, {
+      method: 'POST'
+    });
+
+    const data = await res.json();
+
+    setMessages((prev) => [
+      ...prev,
+      { role: 'assistant', content: "✅ SEO Titles and Descriptions generated!" },
+      { role: 'assistant', content: `📦 SEO Results: ${JSON.stringify(data.seo).slice(0, 300)}...` } // Display part of result
+    ]);
   };
 
   return (
@@ -107,7 +100,7 @@ export default function Home() {
           placeholder="Ask me anything about catalogs, SEO, products..."
           className="flex-1 rounded-full px-4 py-2 text-black"
         />
-        <button className="bg-blue-500 px-4 py-2 rounded-full font-semibold hover:bg-blue-600">
+        <button type="submit" className="bg-blue-500 px-4 py-2 rounded-full font-semibold hover:bg-blue-600">
           Send
         </button>
       </form>
@@ -135,13 +128,6 @@ export default function Home() {
         >
           ✨ Optimize SEO for Catalog
         </button>
-            <button
-  type="button"
-  onClick={handleTestServer}
-  className="bg-purple-500 px-4 py-2 rounded-full font-semibold hover:bg-purple-600 mt-4"
->
-  🛠️ Test Server Connection
-</button>
       </div>
     </div>
   );

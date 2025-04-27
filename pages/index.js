@@ -15,7 +15,7 @@ export default function Home() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: input }),
+      body: JSON.stringify({ message: input })
     });
 
     const data = await res.json();
@@ -25,9 +25,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <header className="p-4 text-center text-2xl font-bold bg-black">
-        After AI CMO Copilot
-      </header>
+      <header className="p-4 text-center text-2xl font-bold bg-black">After AI CMO Copilot</header>
 
       <main className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((m, idx) => (
@@ -54,3 +52,4 @@ export default function Home() {
     </div>
   );
 }
+

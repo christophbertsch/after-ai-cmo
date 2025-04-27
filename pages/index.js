@@ -35,7 +35,7 @@ export default function Home() {
 
     setMessages((prev) => [
       ...prev,
-      { role: 'assistant', content: `â Your catalog "${file.name}" was uploaded successfully!` },
+      { role: 'assistant', content: `Your catalog "${file.name}" was uploaded successfully!` },
       { role: 'assistant', content: "What would you like to do next?\n- Optimize SEO\n- Write Amazon listings\n- Export for Shopify" }
     ]);
 

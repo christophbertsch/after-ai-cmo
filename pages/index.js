@@ -2,49 +2,18 @@ import { useState } from 'react';
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
   const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState('');
+  const [optimizedFileUrl, setOptimizedFileUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    setLoading(true);
-    const userMessage = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-
-    try {
-      const res = await fetch(`${backendUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const data = await res.json();
-      const botMessage = { role: 'assistant', content: data.reply };
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: `❌ Chat failed: ${error.message}` },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileUpload = async () => {
     if (!file || loading) return;
 
     setLoading(true);
-    setMessages((prev) => [
-      ...prev,
-      { role: 'assistant', content: `📤 Uploading ${file.name}...` },
-    ]);
+    setFileName(file.name);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -60,11 +29,10 @@ export default function Home() {
       if (uploadRes.ok) {
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: `✅ Uploaded successfully!` },
-          { role: 'assistant', content: "✨ Ready to Optimize SEO for your catalog!" },
+          { role: 'assistant', content: `✅ Uploaded ${file.name} successfully!` },
         ]);
       } else {
-        throw new Error(data.message || 'Unknown upload error');
+        throw new Error(data.message || 'Upload error');
       }
     } catch (error) {
       setMessages((prev) => [
@@ -73,17 +41,16 @@ export default function Home() {
       ]);
     } finally {
       setLoading(false);
-      setFile(null);
     }
   };
 
   const handleOptimizeSEO = async () => {
-    if (loading) return;
+    if (!fileName || loading) return;
 
     setLoading(true);
     setMessages((prev) => [
       ...prev,
-      { role: 'assistant', content: "🚀 Starting SEO optimization..." },
+      { role: 'assistant', content: "🚀 Optimizing SEO..." },
     ]);
 
     try {
@@ -96,11 +63,19 @@ export default function Home() {
       if (res.ok) {
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: "✅ SEO Titles and Descriptions generated!" },
-          { role: 'assistant', content: `📦 SEO Results (Sample): ${JSON.stringify(data.seo.slice(0, 3), null, 2)}` },
+          { role: 'assistant', content: `✅ SEO optimization complete! ${data.report.changesMade} products optimized.` },
+        ]);
+
+        const optimizedUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${process.env.NEXT_PUBLIC_SUPABASE_BUCKET}/seo/${data.report.optimizedFile}`;
+
+        setOptimizedFileUrl(optimizedUrl);
+
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: `📥 [Download Optimized SEO Catalog](${optimizedUrl})` },
         ]);
       } else {
-        throw new Error(data.message || 'Unknown SEO error');
+        throw new Error(data.message || 'SEO optimization error');
       }
     } catch (error) {
       setMessages((prev) => [
@@ -124,33 +99,23 @@ export default function Home() {
             key={idx}
             className={`p-3 rounded-lg max-w-xl mx-auto ${m.role === 'user' ? 'bg-blue-600 text-right' : 'bg-gray-700 text-left'}`}
           >
-            {m.content}
+            <div dangerouslySetInnerHTML={{ __html: m.content }} />
           </div>
         ))}
       </main>
 
-      <form onSubmit={sendMessage} className="p-4 bg-black flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about catalogs, SEO, products..."
-          className="flex-1 rounded-full px-4 py-2 text-black"
-          disabled={loading}
-        />
-        <button type="submit" className="bg-blue-500 px-4 py-2 rounded-full font-semibold hover:bg-blue-600" disabled={loading}>
-          Send
-        </button>
-      </form>
-
       <div className="p-4 bg-gray-800 flex flex-col items-center space-y-3">
-        <input type="file" accept=".csv,.xml" onChange={(e) => setFile(e.target.files[0])} className="text-black" disabled={loading} />
+        <input type="file" accept=".csv,.xml,.xlsx" onChange={(e) => setFile(e.target.files[0])} className="text-black" disabled={loading} />
+        {fileName && <p className="text-sm">Selected file: {fileName}</p>}
         <button onClick={handleFileUpload} className="bg-green-500 px-4 py-2 rounded-full hover:bg-green-600" disabled={loading || !file}>
           📤 Upload Catalog
         </button>
 
-        <button onClick={handleOptimizeSEO} className="bg-yellow-500 px-4 py-2 rounded-full hover:bg-yellow-600" disabled={loading}>
-          ✨ Optimize SEO
-        </button>
+        {fileName && (
+          <button onClick={handleOptimizeSEO} className="bg-yellow-500 px-4 py-2 rounded-full hover:bg-yellow-600" disabled={loading}>
+            ✨ Optimize SEO
+          </button>
+        )}
       </div>
     </div>
   );

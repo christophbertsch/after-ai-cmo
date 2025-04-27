@@ -12,6 +12,7 @@
     "react-dom": "18.2.0",
     "formidable": "^3.5.1",
     "@supabase/supabase-js": "^2.0.0",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.4.23",
+    "papaparse": "^5.4.1"
   }
 }

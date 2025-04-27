@@ -4,32 +4,47 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
+    setLoading(true);
     const userMessage = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
 
-    const res = await fetch(`${backendUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: input })
-    });
+    try {
+      const res = await fetch(`${backendUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: input }),
+      });
 
-    const data = await res.json();
-    const botMessage = { role: 'assistant', content: data.reply };
-    setMessages((prev) => [...prev, botMessage]);
+      const data = await res.json();
+      const botMessage = { role: 'assistant', content: data.reply };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: `❌ Chat failed: ${error.message}` },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileUpload = async () => {
-    if (!file) return;
+    if (!file || loading) return;
 
-    setMessages((prev) => [...prev, { role: 'assistant', content: `📤 Uploading ${file.name}...` }]);
+    setLoading(true);
+    setMessages((prev) => [
+      ...prev,
+      { role: 'assistant', content: `📤 Uploading ${file.name}...` },
+    ]);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -45,50 +60,55 @@ export default function Home() {
       if (uploadRes.ok) {
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: `✅ Upload completed! Processed ${data.products || 'your'} products.` },
-          { role: 'assistant', content: "✨ Now you can Optimize SEO for your catalog!" }
+          { role: 'assistant', content: `✅ Uploaded successfully!` },
+          { role: 'assistant', content: "✨ Ready to Optimize SEO for your catalog!" },
         ]);
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: `❌ Upload failed: ${data.message}` }
-        ]);
+        throw new Error(data.message || 'Unknown upload error');
       }
     } catch (error) {
-      console.error('Upload failed:', error);
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: `❌ Upload failed: ${error.message}` }
+        { role: 'assistant', content: `❌ Upload failed: ${error.message}` },
       ]);
+    } finally {
+      setLoading(false);
+      setFile(null);
     }
-
-    setFile(null);
   };
 
   const handleOptimizeSEO = async () => {
+    if (loading) return;
+
+    setLoading(true);
     setMessages((prev) => [
       ...prev,
-      { role: 'assistant', content: "🚀 Starting SEO optimization..." }
+      { role: 'assistant', content: "🚀 Starting SEO optimization..." },
     ]);
 
     try {
       const res = await fetch(`${backendUrl}/api/optimize-seo`, {
-        method: 'POST'
+        method: 'POST',
       });
 
       const data = await res.json();
 
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: "✅ SEO Titles and Descriptions generated!" },
-        { role: 'assistant', content: `📦 SEO Results (First Products): ${JSON.stringify(data.seo.slice(0, 3), null, 2)}` }
-      ]);
+      if (res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: "✅ SEO Titles and Descriptions generated!" },
+          { role: 'assistant', content: `📦 SEO Results (Sample): ${JSON.stringify(data.seo.slice(0, 3), null, 2)}` },
+        ]);
+      } else {
+        throw new Error(data.message || 'Unknown SEO error');
+      }
     } catch (error) {
-      console.error('SEO Optimization failed:', error);
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: `❌ SEO Optimization failed: ${error.message}` }
+        { role: 'assistant', content: `❌ SEO Optimization failed: ${error.message}` },
       ]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -113,36 +133,23 @@ export default function Home() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask me anything about catalogs, SEO, products..."
+          placeholder="Ask about catalogs, SEO, products..."
           className="flex-1 rounded-full px-4 py-2 text-black"
+          disabled={loading}
         />
-        <button type="submit" className="bg-blue-500 px-4 py-2 rounded-full font-semibold hover:bg-blue-600">
+        <button type="submit" className="bg-blue-500 px-4 py-2 rounded-full font-semibold hover:bg-blue-600" disabled={loading}>
           Send
         </button>
       </form>
 
       <div className="p-4 bg-gray-800 flex flex-col items-center space-y-3">
-        <h2 className="text-lg font-semibold">📂 Upload your client catalog</h2>
-        <input
-          type="file"
-          accept=".csv,.xml"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="text-black"
-        />
-        <button
-          type="button"
-          onClick={handleFileUpload}
-          className="bg-green-500 px-4 py-2 rounded-full font-semibold hover:bg-green-600"
-        >
+        <input type="file" accept=".csv,.xml" onChange={(e) => setFile(e.target.files[0])} className="text-black" disabled={loading} />
+        <button onClick={handleFileUpload} className="bg-green-500 px-4 py-2 rounded-full hover:bg-green-600" disabled={loading || !file}>
           📤 Upload Catalog
         </button>
 
-        <button
-          type="button"
-          onClick={handleOptimizeSEO}
-          className="bg-yellow-500 px-4 py-2 rounded-full font-semibold hover:bg-yellow-600 mt-4"
-        >
-          ✨ Optimize SEO for Catalog
+        <button onClick={handleOptimizeSEO} className="bg-yellow-500 px-4 py-2 rounded-full hover:bg-yellow-600" disabled={loading}>
+          ✨ Optimize SEO
         </button>
       </div>
     </div>

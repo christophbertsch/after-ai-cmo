@@ -1,37 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductDetails from './ProductDetails';
 
 function ProductsContainer() {
   const [products, setProducts] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
   useEffect(() => {
     async function fetchProducts() {
-      const response = await fetch('/api/products');
-      const data = await response.json();
+      const res = await fetch('/api/products');
+      const data = await res.json();
       setProducts(data);
     }
     fetchProducts();
   }, []);
 
-  if (selectedProduct) {
-    return (
-      <ProductDetails
-        productId={selectedProduct}
-        onBack={() => setSelectedProduct(null)}
-      />
-    );
+  if (selectedProductId) {
+    return <ProductDetails productId={selectedProductId} onBack={() => setSelectedProductId(null)} />;
   }
 
   return (
     <div>
-      {products.slice(0, 10).map(product => (
-        <div key={product.id}>
-          <button onClick={() => setSelectedProduct(product.id)}>
+      <h2>Product List</h2>
+      <ul>
+        {products.map(product => (
+          <li key={product.id} onClick={() => setSelectedProductId(product.id)}>
             {product.name}
-          </button>
-        </div>
-      ))}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

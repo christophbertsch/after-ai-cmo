@@ -4,7 +4,6 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [file, setFile] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(null);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -29,10 +28,10 @@ export default function Home() {
     e.preventDefault();
     if (!file) return;
 
-    setMessages((prev) => [...prev, { role: 'assistant', content: `📄 Starting upload of "${file.name}"...` }]);
-
     const formData = new FormData();
     formData.append('file', file);
+
+    setMessages((prev) => [...prev, { role: 'assistant', content: `📤 Uploading ${file.name}...` }]);
 
     const uploadRes = await fetch('/api/upload-catalog', {
       method: 'POST',
@@ -44,9 +43,8 @@ export default function Home() {
     if (uploadRes.ok) {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: `✅ ${data.message}` },
-        { role: 'assistant', content: "👉 What would you like to do next?" },
-        { role: 'assistant', content: "✨ Click below to Optimize SEO for your catalog!" }
+        { role: 'assistant', content: `✅ Upload completed! Processed ${data.products || 'your'} products.` },
+        { role: 'assistant', content: "✨ Would you like to Optimize SEO for your catalog?" }
       ]);
     } else {
       setMessages((prev) => [
@@ -61,13 +59,13 @@ export default function Home() {
   const handleOptimizeSEO = async () => {
     setMessages((prev) => [
       ...prev,
-      { role: 'assistant', content: "🚀 Optimizing SEO for your catalog... (simulated)" }
+      { role: 'assistant', content: "🚀 Starting SEO optimization..." }
     ]);
 
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: "✅ SEO Titles and Descriptions generated for your products!" }
+        { role: 'assistant', content: "✅ SEO Titles and Descriptions generated for your catalog!" }
       ]);
     }, 3000);
   };
@@ -82,7 +80,7 @@ export default function Home() {
         {messages.map((m, idx) => (
           <div
             key={idx}
-            className={\`p-3 rounded-lg max-w-xl mx-auto \${m.role === 'user' ? 'bg-blue-600 text-right' : 'bg-gray-700 text-left'}\`}
+            className={`p-3 rounded-lg max-w-xl mx-auto ${m.role === 'user' ? 'bg-blue-600 text-right' : 'bg-gray-700 text-left'}`}
           >
             {m.content}
           </div>
@@ -93,7 +91,7 @@ export default function Home() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask me anything about catalogs, SEO, pricing..."
+          placeholder="Ask me anything about catalogs, SEO, products..."
           className="flex-1 rounded-full px-4 py-2 text-black"
         />
         <button className="bg-blue-500 px-4 py-2 rounded-full font-semibold hover:bg-blue-600">

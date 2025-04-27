@@ -56,6 +56,19 @@ export default function Home() {
     setFile(null);
   };
 
+  const handleTestServer = async () => {
+  const res = await fetch('/api/test', {
+    method: 'POST',
+  });
+
+  const data = await res.json();
+
+  setMessages((prev) => [
+    ...prev,
+    { role: 'assistant', content: `🛠️ Test Server Response: ${data.message}` }
+  ]);
+};
+
   const handleOptimizeSEO = async () => {
     setMessages((prev) => [
       ...prev,

@@ -8,7 +8,7 @@ export async function POST(req) {
     messages: [
       {
         role: "system",
-        content: \`You are After AI, an intelligent assistant specialized in automotive and industrial product catalogs.
+        content: `You are After AI, an intelligent assistant specialized in automotive and industrial product catalogs.
 
 Your tasks include:
 - Helping suppliers manage and improve product data
@@ -17,7 +17,7 @@ Your tasks include:
 - Explaining MAM/PIM best practices
 - Assisting with catalog imports (CSV, BMEcat, TecDoc, PIES)
 
-Always answer with professional, clear, and actionable information.\`
+Always answer with professional, clear, and actionable information.`,
       },
       { role: "user", content: message }
     ],
@@ -28,10 +28,11 @@ Always answer with professional, clear, and actionable information.\`
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: \`Bearer \${process.env.OPENAI_API_KEY}\`,
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 
   const data = await response.json();
   return NextResponse.json({ reply: data.choices[0].message.content });
+}

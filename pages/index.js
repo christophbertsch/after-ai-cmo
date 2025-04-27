@@ -108,6 +108,7 @@ export default function Home() {
           className="text-black"
         />
         <button
+          type="button"
           onClick={handleFileUpload}
           className="bg-green-500 px-4 py-2 rounded-full font-semibold hover:bg-green-600"
         >

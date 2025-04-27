@@ -116,6 +116,7 @@ export default function Home() {
         </button>
 
         <button
+          type="button"
           onClick={handleOptimizeSEO}
           className="bg-yellow-500 px-4 py-2 rounded-full font-semibold hover:bg-yellow-600 mt-4"
         >

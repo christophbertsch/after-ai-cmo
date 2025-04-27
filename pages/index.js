@@ -34,23 +34,31 @@ export default function Home() {
     const formData = new FormData();
     formData.append('file', file);
 
-    const uploadRes = await fetch(`${backendUrl}/api/upload-catalog`, {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      const uploadRes = await fetch(`${backendUrl}/api/upload-catalog`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    const data = await uploadRes.json();
+      const data = await uploadRes.json();
 
-    if (uploadRes.ok) {
+      if (uploadRes.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: `✅ Upload completed! Processed ${data.products || 'your'} products.` },
+          { role: 'assistant', content: "✨ Now you can Optimize SEO for your catalog!" }
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: `❌ Upload failed: ${data.message}` }
+        ]);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: `✅ Upload completed! Processed ${data.products || 'your'} products.` },
-        { role: 'assistant', content: "✨ Would you like to Optimize SEO for your catalog?" }
-      ]);
-    } else {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: `❌ Upload failed: ${data.message}` }
+        { role: 'assistant', content: `❌ Upload failed: ${error.message}` }
       ]);
     }
 
@@ -63,17 +71,25 @@ export default function Home() {
       { role: 'assistant', content: "🚀 Starting SEO optimization..." }
     ]);
 
-    const res = await fetch(`${backendUrl}/api/optimize-seo`, {
-      method: 'POST'
-    });
+    try {
+      const res = await fetch(`${backendUrl}/api/optimize-seo`, {
+        method: 'POST'
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setMessages((prev) => [
-      ...prev,
-      { role: 'assistant', content: "✅ SEO Titles and Descriptions generated!" },
-      { role: 'assistant', content: `📦 SEO Results: ${JSON.stringify(data.seo).slice(0, 300)}...` } // Display part of result
-    ]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: "✅ SEO Titles and Descriptions generated!" },
+        { role: 'assistant', content: `📦 SEO Results (First Products): ${JSON.stringify(data.seo.slice(0, 3), null, 2)}` }
+      ]);
+    } catch (error) {
+      console.error('SEO Optimization failed:', error);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: `❌ SEO Optimization failed: ${error.message}` }
+      ]);
+    }
   };
 
   return (

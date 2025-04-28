@@ -13,7 +13,8 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const uniqueFilename = `${Date.now()}-${file.name}`;
+      const timestamp = Date.now();
+      const uniqueFilename = `${timestamp}-${file.name}`;
 
       const res = await fetch(`${backendUrl}/api/generate-upload-url`, {
         method: 'POST',
@@ -165,7 +166,7 @@ export default function Home() {
   );
 }
 
-// Required for dynamic pages on Vercel
+// Required by Vercel for dynamic page
 export async function getServerSideProps() {
   return { props: {} };
 }

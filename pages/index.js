@@ -11,17 +11,37 @@ export default function Home() {
   const handleFileUpload = async () => {
     if (!file) return;
     setLoading(true);
-    const formData = new FormData();
-    formData.append('file', file);
 
     try {
-      await fetch(`${backendUrl}/api/upload-catalog`, {
+      // Step 1: Request signed upload URL from backend
+      const res = await fetch(`${backendUrl}/api/generate-upload-url`, {
         method: 'POST',
-        body: formData,
-        credentials: 'include', // ✅ Important!
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ filename: file.name }),
       });
+
+      const { signedUrl } = await res.json();
+
+      if (!signedUrl) {
+        alert('❌ Failed to get signed upload URL');
+        return;
+      }
+
+      // Step 2: Upload the file directly to Supabase using the signed URL
+      const uploadRes = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error('Upload to Supabase failed');
+      }
+
       alert(`✅ Uploaded ${file.name} successfully!`);
     } catch (error) {
+      console.error('Upload error:', error);
       alert(`❌ Upload failed: ${error.message}`);
     } finally {
       setLoading(false);
@@ -35,12 +55,14 @@ export default function Home() {
     try {
       const res = await fetch(`${backendUrl}/api/optimize-seo${optimizeAll ? '?optimizeAll=true' : ''}`, {
         method: 'POST',
+        credentials: 'include',
       });
 
       const data = await res.json();
       setOptimizedProducts(data.seo || []);
       alert(`✅ SEO optimization complete!`);
     } catch (error) {
+      console.error('SEO optimization error:', error);
       alert(`❌ SEO Optimization failed: ${error.message}`);
     } finally {
       setLoading(false);
@@ -90,7 +112,7 @@ export default function Home() {
   );
 }
 
-// 👇 Keep this for dynamic pages on Vercel
+// Required for dynamic behavior on Vercel
 export async function getServerSideProps() {
   return { props: {} };
 }

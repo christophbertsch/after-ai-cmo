@@ -3,6 +3,7 @@ import { useState } from 'react';
 export default function Home() {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [optimizedProducts, setOptimizedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -73,6 +74,7 @@ export default function Home() {
       });
 
       const data = await res.json();
+      setOptimizedProducts(data.seo || []);
       alert(`✅ SEO optimization complete! Products optimized: ${data.report.optimizedCount}`);
     } catch (error) {
       console.error('SEO optimization error:', error);
@@ -136,12 +138,34 @@ export default function Home() {
         </button>
       </div>
 
+      {optimizedProducts.length > 0 && (
+        <div style={{ marginTop: '30px' }}>
+          <h2>Optimized Products (First 10):</h2>
+          <ul>
+            {optimizedProducts.map((product, idx) => (
+              <li key={idx} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
+                <p><strong>Product ID:</strong> {product.ProductID}</p>
+                <p><strong>Original Description:</strong> {product.OriginalDescription}</p>
+                <p><strong>Optimized Description:</strong> {product.OptimizedDescription}</p>
+                <p><strong>Manufacturer:</strong> {product.Manufacturer}</p>
+                <p><strong>GTIN:</strong> {product.GTIN}</p>
+                <p><strong>Hazardous Material:</strong> {product.HazardousMaterial}</p>
+                <p><strong>Extended Information:</strong> {product.ExtendedInformation}</p>
+                <p><strong>Product Attributes:</strong> {JSON.stringify(product.ProductAttributes)}</p>
+                <p><strong>Part Interchange Info:</strong> {JSON.stringify(product.PartInterchangeInfo)}</p>
+                <p><strong>Digital Assets:</strong> {JSON.stringify(product.DigitalAssets)}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {fileName && <p style={{ marginTop: '10px' }}>Selected file: {fileName}</p>}
     </div>
   );
 }
 
-// Dynamic behavior on Vercel
+// Required for dynamic pages on Vercel
 export async function getServerSideProps() {
   return { props: {} };
 }

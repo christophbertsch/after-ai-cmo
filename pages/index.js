@@ -18,6 +18,7 @@ export default function Home() {
       await fetch(`${backendUrl}/api/upload-catalog`, {
         method: 'POST',
         body: formData,
+        credentials: 'include', // ✅ Important!
       });
       alert(`✅ Uploaded ${file.name} successfully!`);
     } catch (error) {
@@ -37,7 +38,7 @@ export default function Home() {
       });
 
       const data = await res.json();
-      setOptimizedProducts(data.optimizedProducts);
+      setOptimizedProducts(data.seo || []);
       alert(`✅ SEO optimization complete!`);
     } catch (error) {
       alert(`❌ SEO Optimization failed: ${error.message}`);
@@ -50,9 +51,16 @@ export default function Home() {
     <div>
       <h1>Product Catalog SEO Optimization</h1>
 
-      <input type="file" accept=".csv,.xml,.xlsx" onChange={(e) => setFile(e.target.files[0])} />
+      <input
+        type="file"
+        accept=".csv,.xml,.xlsx"
+        onChange={(e) => {
+          setFile(e.target.files[0]);
+          setFileName(e.target.files[0]?.name || '');
+        }}
+      />
       <button onClick={handleFileUpload} disabled={loading || !file}>
-        Upload Catalog
+        {loading ? 'Uploading...' : 'Upload Catalog'}
       </button>
 
       {fileName && (
@@ -82,7 +90,7 @@ export default function Home() {
   );
 }
 
-// 👇 THIS FIXES THE VERCEL WARNING
+// 👇 Keep this for dynamic pages on Vercel
 export async function getServerSideProps() {
   return { props: {} };
 }

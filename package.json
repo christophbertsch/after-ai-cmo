@@ -1,5 +1,5 @@
 {
-  "name": "after-ai-cmo-frontend",
+  "name": "after-ai-cmo-copilot",
   "version": "1.0.0",
   "scripts": {
     "dev": "next dev",
@@ -10,8 +10,17 @@
     "next": "13.4.12",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "json2csv": "^6.0.0"
+    "@supabase/supabase-js": "^2.0.0",
+    "formidable": "^3.5.1",
+    "fs": "^0.0.1-security",
+    "xml2js": "^0.4.23",
+    "openai": "^4.43.1",
+    "@qdrant/js-client-rest": "^1.7.4",
+    "json2csv": "^6.0.0",
+    "stripe": "^12.0.0"
+  },
+  "devDependencies": {
+    "eslint": "8.46.0",
+    "eslint-config-next": "13.4.12"
   }
-
-
 }

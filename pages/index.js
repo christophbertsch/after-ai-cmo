@@ -1,3 +1,4 @@
+// index.js
 import { useState } from 'react';
 
 export default function Home() {
@@ -5,168 +6,65 @@ export default function Home() {
   const [fileName, setFileName] = useState('');
   const [optimizedProducts, setOptimizedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
   const handleFileUpload = async () => {
     if (!file) return;
     setLoading(true);
+    const timestamp = Date.now();
+    const uniqueFilename = `${timestamp}-${file.name}`;
 
-    try {
-      const timestamp = Date.now();
-      const uniqueFilename = `${timestamp}-${file.name}`;
+    const res = await fetch(`${backendUrl}/api/generate-upload-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: uniqueFilename })
+    });
+    const { signedUrl } = await res.json();
 
-      const res = await fetch(`${backendUrl}/api/generate-upload-url`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ filename: uniqueFilename }),
-      });
-
-      const { signedUrl } = await res.json();
-
-      if (!signedUrl) {
-        alert('❌ Failed to get signed upload URL');
-        return;
-      }
-
-      await fetch(signedUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      });
-
-      setFileName(uniqueFilename);
-      alert(`✅ Uploaded ${file.name} successfully!`);
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert(`❌ Upload failed: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleExtractProducts = async () => {
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${backendUrl}/api/extract-products`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      const data = await res.json();
-      alert(`✅ Products extracted: ${data.totalProducts}`);
-    } catch (error) {
-      console.error('Extract error:', error);
-      alert(`❌ Extraction failed: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+    await fetch(signedUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+    setFileName(uniqueFilename);
+    alert(`✅ Uploaded ${file.name}`);
+    setLoading(false);
   };
 
   const handleOptimizeSEO = async (optimizeAll = false) => {
+    if (!fileName) return;
     setLoading(true);
-
-    try {
-      const res = await fetch(`${backendUrl}/api/optimize-seo${optimizeAll ? '?optimizeAll=true' : ''}`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await res.json();
-      setOptimizedProducts(data.seo || []);
-      alert(`✅ SEO optimization complete! Products optimized: ${data.report.optimizedCount}`);
-    } catch (error) {
-      console.error('SEO optimization error:', error);
-      alert(`❌ SEO Optimization failed: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleConvertToOCI = async () => {
-    setLoading(true);
-
-    try {
-      const res = await fetch(`${backendUrl}/api/convert-to-oci`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await res.json();
-      alert(`✅ OCI Catalog created! Products: ${data.ociProductsCount}`);
-    } catch (error) {
-      console.error('OCI conversion error:', error);
-      alert(`❌ OCI Conversion failed: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+    const res = await fetch(`${backendUrl}/api/optimize-seo${optimizeAll ? '?optimizeAll=true' : ''}`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    setOptimizedProducts(data.seo);
+    setLoading(false);
   };
 
   return (
-    <div>
-      <h1>After AI CMO Copilot</h1>
-
-      <input
-        type="file"
-        accept=".csv,.xml,.xlsx"
-        onChange={(e) => {
-          setFile(e.target.files[0]);
-          setFileName('');
-        }}
-      />
-
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={handleFileUpload} disabled={loading || !file}>
-          {loading ? 'Uploading...' : '1️⃣ Upload Catalog'}
-        </button>
-
-        <button onClick={handleExtractProducts} disabled={loading}>
-          2️⃣ Extract Products
-        </button>
-
-        <button onClick={() => handleOptimizeSEO(false)} disabled={loading}>
-          3️⃣ Optimize First 10 Products
-        </button>
-
-        <button onClick={() => handleOptimizeSEO(true)} disabled={loading}>
-          4️⃣ Optimize All Products
-        </button>
-
-        <button onClick={handleConvertToOCI} disabled={loading}>
-          5️⃣ Convert to OCI
-        </button>
-      </div>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">AI Catalog Optimization</h1>
+      <input type="file" accept=".xml,.csv" onChange={(e) => setFile(e.target.files[0])} />
+      <button onClick={handleFileUpload} disabled={!file || loading} className="ml-4 bg-blue-600 text-white px-4 py-2">Upload</button>
+      <button onClick={() => handleOptimizeSEO(false)} className="ml-2 px-4 py-2 bg-yellow-500 text-white">Optimize 10</button>
+      <button onClick={() => handleOptimizeSEO(true)} className="ml-2 px-4 py-2 bg-green-500 text-white">Optimize All</button>
 
       {optimizedProducts.length > 0 && (
-        <div style={{ marginTop: '30px' }}>
-          <h2>Optimized Products (First 10):</h2>
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-2">Optimized Products</h2>
           <ul>
-            {optimizedProducts.map((product, idx) => (
-              <li key={idx} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
-                <p><strong>Product ID:</strong> {product.ProductID}</p>
-                <p><strong>Original Description:</strong> {product.OriginalDescription}</p>
-                <p><strong>Optimized Description:</strong> {product.OptimizedDescription}</p>
-                <p><strong>Manufacturer:</strong> {product.Manufacturer}</p>
-                <p><strong>GTIN:</strong> {product.GTIN}</p>
-                <p><strong>Hazardous Material:</strong> {product.HazardousMaterial}</p>
-                <p><strong>Extended Information:</strong> {product.ExtendedInformation}</p>
-                <p><strong>Product Attributes:</strong> {JSON.stringify(product.ProductAttributes)}</p>
-                <p><strong>Part Interchange Info:</strong> {JSON.stringify(product.PartInterchangeInfo)}</p>
-                <p><strong>Digital Assets:</strong> {JSON.stringify(product.DigitalAssets)}</p>
+            {optimizedProducts.slice(0, 10).map((product, i) => (
+              <li key={i} className="border p-2 mb-2">
+                <strong>{product.ProductID}</strong>: {product.OptimizedDescription}<br />
+                GTIN: {product.GTIN} — Manufacturer: {product.Manufacturer}<br />
+                Price: {product.SuggestedPrice || '-'}
               </li>
             ))}
           </ul>
         </div>
       )}
-
-      {fileName && <p style={{ marginTop: '10px' }}>Selected file: {fileName}</p>}
     </div>
   );
 }
 
-// Required by Vercel for dynamic page
-export async function getServerSideProps() {
-  return { props: {} };
-}
